@@ -1,38 +1,36 @@
-package server;
-
-import terminal.dialogTerminal;
+package com.annhuny.server;
 
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 public class SingleServer {
-    public int port;
-    public ServerSocket serverSocket;
-    public Socket socket;
+    private int port;
+    private ServerSocket serverSocket;
 
     public SingleServer(int port) {
         this.port = port;
     }
 
 
-    public void runServer() throws IOException {
+    private void runServer() throws IOException {
         this.serverSocket = new ServerSocket(port);
-        System.out.println("socket chat server start at port: " + port);
+        System.out.println("server start at port: " + port);
 
+        Executor services = Executors.newCachedThreadPool();
         while (true) {
-            this.socket = serverSocket.accept();
             //thread will be blocked until a request arrive
+            Socket socket = serverSocket.accept();
             System.out.println("accept request from " + socket.getInetAddress().getHostAddress());
-
-            //开始聊天框
-            new dialogTerminal(socket).open();
+            services.execute(new WorkerThread(socket));
         }
     }
 
 
     public static void main(String[] args) {
-        SingleServer singleServer = new SingleServer(6666);
+        SingleServer singleServer = new SingleServer(9000);
 
         try {
             singleServer.runServer();
